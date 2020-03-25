@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/ipfs/go-graphsync v0.0.4
+	github.com/ipfs/go-hamt-ipld v0.0.0-00010101000000-000000000000
 	github.com/ipfs/go-ipfs v0.4.23
 	github.com/ipfs/go-ipfs-blockstore v0.1.4
 	github.com/ipfs/interface-go-ipfs-core v0.2.6
@@ -13,3 +14,5 @@ require (
 )
 
 replace github.com/ipfs/go-ipfs => github.com/tau-coin/go-ipfs v0.4.22-0.20200313092758-7b227442e904
+
+replace github.com/ipfs/go-hamt-ipld => github.com/ipfs/go-hamt-ipld v0.0.13
