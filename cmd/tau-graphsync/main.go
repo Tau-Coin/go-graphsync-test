@@ -6,6 +6,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/libp2p/go-eventbus"
+	"github.com/libp2p/go-libp2p-core/event"
 	ipfs "github.com/ipfs/go-ipfs/lib"
 	util "github.com/ipfs/go-ipfs/lib/util"
 
@@ -21,10 +23,14 @@ func main() {
 	intrh, ctx := util.SetupInterruptHandler(context.Background())
 	defer intrh.Close()
 
-	var err      error
-	var errCh    <-chan error
-	var wg       sync.WaitGroup
-	var repoPath string
+	var (
+		err		error
+		errCh		<-chan error
+		wg		sync.WaitGroup
+		repoPath	string
+		subscription	event.Subscription
+		gsCtx		*GraphsyncContext
+	)
 
 	repoPath = os.Getenv("HOME") + "/" + repoDir
 	fmt.Printf("repo path is:%s\n", repoPath)
@@ -52,11 +58,15 @@ func main() {
 	}
 
 	// Then setup graphsync context
-	_, err = setupGSContext(ctx)
+	gsCtx, err = setupGSContext(ctx)
 	if err != nil {
 		fmt.Printf("setup graphsync error:%v\n", err)
 		os.Exit(1)
 	}
+
+	subscription, err = gsCtx.Host().EventBus().Subscribe(&event.EvtPeerIdentificationCompleted{}, eventbus.BufSize(32))
+	wg.Add(1)
+	go handleEvent(wg, subscription, gsCtx)
 
 	wg.Add(1)
 	go func() {
@@ -95,4 +105,32 @@ func testCoreAPI() {
         fmt.Printf("IPFS Node id:%s\n", id.ID())
 
 	fmt.Println("Coreapi test passed")
+}
+
+func handleEvent(wg sync.WaitGroup, sub event.Subscription, gsCtx *GraphsyncContext) {
+	defer wg.Done()
+
+	defer func() {
+		_ = sub.Close()
+		// drain the channel.
+		for range sub.Out() {
+		}
+	}()
+
+	for {
+		select {
+		case evt, more := <-sub.Out():
+			if !more {
+				return
+			}
+
+			// TODO: trigger graphsync process
+			idCompletedEvt, ok := evt.(*event.EvtPeerIdentificationCompleted)
+			if ok {
+				fmt.Printf("Identity completed peer:%s\n", idCompletedEvt.Peer)
+			}
+		case <-gsCtx.ctx.Done():
+			return
+		}
+	}
 }
