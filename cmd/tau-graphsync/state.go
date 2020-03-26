@@ -68,7 +68,3 @@ func setupStateTree(ctx context.Context) (ipld.Link, error) {
 
 	return cidlink.Link{c}, nil
 }
-
-func stateSelector() ipld.Node {
-	return nil
-}
