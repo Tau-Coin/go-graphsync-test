@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/libp2p/go-libp2p-core/host"
 
@@ -128,6 +129,9 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
 		return
 	}
 
+	fmt.Println("graphsync is stating...")
+	start := time.Now()
+
 	progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, stateSelector(), gsCtx.extension)
 
 	responses := collectResponses(gsCtx.ctx,  progressChan)
@@ -138,6 +142,8 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
 		fmt.Println("errors during traverse")
 		return
 	}
+
+	fmt.Println("graph sync took: ", time.Since(start))
 
 	for _, response := range responses {
 		fmt.Printf("path:%s\n", response.Path.String())
