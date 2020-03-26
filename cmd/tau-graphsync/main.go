@@ -132,7 +132,7 @@ func handleEvent(wg sync.WaitGroup, sub event.Subscription, gsCtx *GraphsyncCont
 				fmt.Printf("Identity completed peer:%s\n", pid)
 				if isRelay(gsCtx.Host().Peerstore().Addrs(pid)) {
 					// trigger graphsync process
-					go gsCtx.GraphsyncTest()
+					go gsCtx.GraphsyncTest(pid)
 				}
 			}
 		case <-gsCtx.ctx.Done():

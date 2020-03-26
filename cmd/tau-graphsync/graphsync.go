@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/libp2p/go-libp2p-core/host"
 
@@ -15,6 +17,7 @@ import (
 
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	ipfs "github.com/ipfs/go-ipfs/lib"
+	"github.com/libp2p/go-libp2p-core/peer"
 )
 
 type GraphsyncContext struct {
@@ -43,6 +46,8 @@ type GraphsyncContext struct {
 	extensionResponseData	[]byte
 
 	extensionResponse	graphsync.ExtensionData
+
+	graphExchanger		graphsync.GraphExchange
 }
 
 func setupGSContext(ctx context.Context, root ipld.Link) (*GraphsyncContext, error) {
@@ -75,6 +80,8 @@ func setupGSContext(ctx context.Context, root ipld.Link) (*GraphsyncContext, err
 		Data: gsCtx.extensionResponseData,
 	}
 
+	gsCtx.graphExchanger		= gsCtx.GraphSyncHost()
+
 	return gsCtx, nil
 }
 
@@ -86,5 +93,86 @@ func (gsCtx *GraphsyncContext) Host() host.Host {
 	return gsCtx.host
 }
 
-func (gsCtx *GraphsyncContext) GraphsyncTest() {
+func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
+	var (
+		receivedResponseData []byte
+		receivedRequestData []byte
+	)
+
+	err := gsCtx.graphExchanger.RegisterResponseReceivedHook(
+		func(p peer.ID, responseData graphsync.ResponseData) error {
+			data, has := responseData.Extension(gsCtx.extensionName)
+			if has {
+				receivedResponseData = data
+				fmt.Println("reponse extension ", receivedResponseData)
+			}
+			return nil
+		})
+	if err != nil {
+		fmt.Printf("Error setting up extension:%v\n", err)
+		return
+	}
+
+	err = gsCtx.graphExchanger.RegisterRequestReceivedHook(func(p peer.ID, requestData graphsync.RequestData, hookActions graphsync.RequestReceivedHookActions) {
+		var has bool
+		receivedRequestData, has = requestData.Extension(gsCtx.extensionName)
+		if !has {
+			hookActions.TerminateWithError(errors.New("Missing extension"))
+		} else {
+			hookActions.SendExtensionData(gsCtx.extensionResponse)
+		}
+	})
+
+	if err != nil {
+		fmt.Printf("Error setting up extension:%v\n", err)
+		return
+	}
+
+	progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, stateSelector(), gsCtx.extension)
+
+	responses := collectResponses(gsCtx.ctx,  progressChan)
+	errs := collectErrors(gsCtx.ctx, errChan)
+
+	fmt.Printf("graphsyn result, response size:%d, errors size:%d\n", len(responses), len(errs))
+	if len(errs) != 0 {
+		fmt.Println("errors during traverse")
+		return
+	}
+
+	for _, response := range responses {
+		fmt.Printf("path:%s\n", response.Path.String())
+	}
+}
+
+// collectResponses is just a utility to convert a graphsync response progress
+// channel into an array.
+func collectResponses(ctx context.Context, responseChan <-chan graphsync.ResponseProgress) []graphsync.ResponseProgress {
+	var collectedBlocks []graphsync.ResponseProgress
+	for {
+		select {
+		case blk, ok := <-responseChan:
+			if !ok {
+				return collectedBlocks
+			}
+			collectedBlocks = append(collectedBlocks, blk)
+		case <-ctx.Done():
+			fmt.Println("response channel never closed")
+		}
+	}
+}
+
+// collectErrors is just a utility to convert an error channel into an array.
+func collectErrors(ctx context.Context, errChan <-chan error) []error {
+	var collectedErrors []error
+	for {
+		select {
+		case err, ok := <-errChan:
+			if !ok {
+				return collectedErrors
+			}
+			collectedErrors = append(collectedErrors, err)
+		case <-ctx.Done():
+			fmt.Println("error channel never closed")
+		}
+	}
 }
