@@ -32,6 +32,8 @@ type GraphsyncContext struct {
 
 	storer			ipld.Storer
 
+	root			ipld.Link
+
 	extensionData		[]byte
 
 	extensionName		graphsync.ExtensionName
@@ -43,9 +45,10 @@ type GraphsyncContext struct {
 	extensionResponse	graphsync.ExtensionData
 }
 
-func setupGSContext(ctx context.Context) (*GraphsyncContext, error) {
+func setupGSContext(ctx context.Context, root ipld.Link) (*GraphsyncContext, error) {
 	gsCtx := &GraphsyncContext{
-		ctx: ctx,
+		ctx:	ctx,
+		root:	root,
 	}
 
 	// get ipfs node
@@ -81,4 +84,7 @@ func (gsCtx *GraphsyncContext) GraphSyncHost() graphsync.GraphExchange {
 
 func (gsCtx *GraphsyncContext) Host() host.Host {
 	return gsCtx.host
+}
+
+func (gsCtx *GraphsyncContext) GraphsyncTest() {
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/libp2p/go-eventbus"
 	"github.com/libp2p/go-libp2p-core/event"
+	ipld "github.com/ipld/go-ipld-prime"
 	ipfs "github.com/ipfs/go-ipfs/lib"
 	util "github.com/ipfs/go-ipfs/lib/util"
 
@@ -30,6 +31,7 @@ func main() {
 		repoPath	string
 		subscription	event.Subscription
 		gsCtx		*GraphsyncContext
+		root		ipld.Link
 	)
 
 	repoPath = os.Getenv("HOME") + "/" + repoDir
@@ -51,14 +53,14 @@ func main() {
 	testCoreAPI()
 
 	// Anyway, we should setup state tree firstly.
-	_, err = setupStateTree(ctx)
+	root, err = setupStateTree(ctx)
 	if err != nil {
 		fmt.Printf("setup state tree error:%v\n", err)
 		os.Exit(1)
 	}
 
 	// Then setup graphsync context
-	gsCtx, err = setupGSContext(ctx)
+	gsCtx, err = setupGSContext(ctx, root)
 	if err != nil {
 		fmt.Printf("setup graphsync error:%v\n", err)
 		os.Exit(1)
@@ -124,10 +126,14 @@ func handleEvent(wg sync.WaitGroup, sub event.Subscription, gsCtx *GraphsyncCont
 				return
 			}
 
-			// TODO: trigger graphsync process
 			idCompletedEvt, ok := evt.(*event.EvtPeerIdentificationCompleted)
 			if ok {
-				fmt.Printf("Identity completed peer:%s\n", idCompletedEvt.Peer)
+				pid := idCompletedEvt.Peer
+				fmt.Printf("Identity completed peer:%s\n", pid)
+				if isRelay(gsCtx.Host().Peerstore().Addrs(pid)) {
+					// trigger graphsync process
+					go gsCtx.GraphsyncTest()
+				}
 			}
 		case <-gsCtx.ctx.Done():
 			return
