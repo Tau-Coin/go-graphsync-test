@@ -102,11 +102,13 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
 
 	err := gsCtx.graphExchanger.RegisterResponseReceivedHook(
 		func(p peer.ID, responseData graphsync.ResponseData) error {
+			fmt.Println("graphsync response received...")
 			data, has := responseData.Extension(gsCtx.extensionName)
 			if has {
 				receivedResponseData = data
 				fmt.Println("reponse extension ", receivedResponseData)
 			}
+			fmt.Println("reponse status:", responseData.Status())
 			return nil
 		})
 	if err != nil {
@@ -115,6 +117,7 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
 	}
 
 	err = gsCtx.graphExchanger.RegisterRequestReceivedHook(func(p peer.ID, requestData graphsync.RequestData, hookActions graphsync.RequestReceivedHookActions) {
+		fmt.Printf("graphsync reqeust received, root:%v, selector:%v\n", requestData.Root(), requestData.Selector())
 		var has bool
 		receivedRequestData, has = requestData.Extension(gsCtx.extensionName)
 		if !has {
