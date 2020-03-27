@@ -23,7 +23,8 @@ func createMapNode(ctx context.Context) (ipld.Link, error) {
 	//build node
 	mapNodeBuilder := fluent.WrapNodeBuilder(ipldfree.NodeBuilder())
     mapNode := mapNodeBuilder.CreateMap(func(mb fluent.MapBuilder, knb fluent.NodeBuilder, vnb fluent.NodeBuilder) {
-			mb.Insert(knb.CreateString("Coin"), vnb.CreateString("TAU"))
+			//mb.Insert(knb.CreateString("Coin"), vnb.CreateString("TAU"))
+			mb.Insert(knb.CreateString("hamt"), vnb.CreateString("bafy2bzaceciimlk7tioay4g2zd226l35s4g3gu6fuwfd6l53nddv3nra4b6xw"))
 		})
 
 	//node -> link
