@@ -3,6 +3,7 @@ module github.com/Tau-Coin/go-graphsync-test
 go 1.14
 
 require (
+	github.com/ipfs/go-block-format v0.0.2
 	github.com/ipfs/go-cid v0.0.5
 	github.com/ipfs/go-graphsync v0.0.4
 	github.com/ipfs/go-hamt-ipld v0.0.0-00010101000000-000000000000
