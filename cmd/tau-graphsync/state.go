@@ -31,7 +31,7 @@ func setupStateTree(ctx context.Context) (ipld.Link, error) {
 	fmt.Println("Start key and value random assignment")
 	vals := make(map[string][]byte)
 	var keys []string
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 10; i++ {
 		s := randString()
 		vals[s] = randValue()
 		keys = append(keys, s)
@@ -65,6 +65,8 @@ func setupStateTree(ctx context.Context) (ipld.Link, error) {
 		return nil, err
 	}
 	fmt.Println("Put took: ", time.Since(befPut))
+
+	fmt.Println("Cid is: ", c)
 
 	return cidlink.Link{c}, nil
 }
