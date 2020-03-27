@@ -25,6 +25,16 @@ func randValue() []byte {
 	return buf
 }
 
+func testString(i int) string {
+	keyTmp :=  "hamtk"+ string(i)
+	return keyTmp
+}
+
+func testValue(i int) []byte {
+	valueTmp :=  "hamtv"+ string(i)
+	return []byte(valueTmp)
+}
+
 // setup state hamt tree, and return the root link or some error
 func setupStateTree(ctx context.Context) (ipld.Link, error) {
 
@@ -32,8 +42,10 @@ func setupStateTree(ctx context.Context) (ipld.Link, error) {
 	vals := make(map[string][]byte)
 	var keys []string
 	for i := 0; i < 10; i++ {
-		s := randString()
-		vals[s] = randValue()
+		//s := randString()
+		//vals[s] = randValue()
+		s := testString(i)
+		vals[s] = testValue(i)
 		keys = append(keys, s)
 	}
 
