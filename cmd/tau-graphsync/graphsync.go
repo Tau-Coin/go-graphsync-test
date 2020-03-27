@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"github.com/libp2p/go-libp2p-core/host"
 
 	ipld "github.com/ipld/go-ipld-prime"
+	"github.com/ipld/go-ipld-prime/encoding/dagjson"
 
 	graphsync "github.com/ipfs/go-graphsync"
 	graphsyncimpl "github.com/ipfs/go-graphsync/impl"
@@ -149,7 +151,8 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
 	fmt.Println("graph sync took: ", time.Since(start))
 
 	for _, response := range responses {
-		fmt.Printf("path:%s\n", response.Path.String())
+		fmt.Printf("node path:%s\n", response.Path.String())
+		fmt.Printf("node json:%s\n", nodeToJson(response.Node))
 	}
 }
 
@@ -184,5 +187,16 @@ func collectErrors(ctx context.Context, errChan <-chan error) []error {
 		case <-ctx.Done():
 			fmt.Println("error channel never closed")
 		}
+	}
+}
+
+func nodeToJson(node ipld.Node) string {
+	buff := new(bytes.Buffer)
+	err := dagjson.Encoder(node, buff)
+	if err != nil {
+		fmt.Println("dagjson encode err:", err)
+		return ""
+	} else {
+		return buff.String()
 	}
 }
