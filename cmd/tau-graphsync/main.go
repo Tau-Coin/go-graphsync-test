@@ -53,7 +53,7 @@ func main() {
 	testCoreAPI()
 
 	// Anyway, we should setup state tree firstly.
-	root, err = setupStateTree(ctx)
+	root, err = createMapNode(ctx)
 	if err != nil {
 		fmt.Printf("setup state tree error:%v\n", err)
 		os.Exit(1)
