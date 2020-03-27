@@ -153,7 +153,7 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
 
 	for _, response := range responses {
 		fmt.Printf("node path:%s\n", response.Path.String())
-		fmt.Printf("node json:%s\n", nodeToJson(response.Node))
+		//fmt.Printf("node json:%s\n", nodeToJson(response.Node))
 	}
 }
 
