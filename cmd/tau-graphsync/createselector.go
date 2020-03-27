@@ -8,7 +8,8 @@ import (
 
 // state hamt tree
 func stateSelector() ipld.Node {
-	return nil
+	ssb := builder.NewSelectorSpecBuilder(ipldfree.NodeBuilder())
+    return ssb.ExploreRecursiveEdge().Node()
 }
 
 // map 
