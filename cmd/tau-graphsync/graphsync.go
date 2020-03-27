@@ -132,7 +132,7 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
 		return
 	}
 
-	fmt.Println("graphsync is stating...")
+	fmt.Println("graphsync is starting...")
 	start := time.Now()
 
 	progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, mapSelector(), gsCtx.extension)

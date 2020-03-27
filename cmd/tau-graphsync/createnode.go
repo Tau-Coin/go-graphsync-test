@@ -45,5 +45,7 @@ func createMapNode(ctx context.Context) (ipld.Link, error) {
 		return nil, err
 	}
 
+	fmt.Printf("Mapnode's link is: %v\n", linkMapNode.String())
+
 	return linkMapNode, nil
 }
