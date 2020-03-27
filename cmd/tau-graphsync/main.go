@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"sync"
 
 	"github.com/libp2p/go-eventbus"
@@ -119,14 +120,17 @@ func handleEvent(wg sync.WaitGroup, sub event.Subscription, gsCtx *GraphsyncCont
 		}
 	}()
 
+	fmt.Println("starting handle event...")
 	for {
 		select {
 		case evt, more := <-sub.Out():
+			fmt.Printf("receive event:%v\n", evt)
+			fmt.Println("event type:", reflect.TypeOf(evt))
 			if !more {
 				return
 			}
 
-			idCompletedEvt, ok := evt.(*event.EvtPeerIdentificationCompleted)
+			idCompletedEvt, ok := evt.(event.EvtPeerIdentificationCompleted)
 			if ok {
 				pid := idCompletedEvt.Peer
 				fmt.Printf("Identity completed peer:%s\n", pid)

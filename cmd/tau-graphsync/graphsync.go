@@ -176,6 +176,7 @@ func collectErrors(ctx context.Context, errChan <-chan error) []error {
 			if !ok {
 				return collectedErrors
 			}
+			fmt.Printf("graphsync err:%v\n", err)
 			collectedErrors = append(collectedErrors, err)
 		case <-ctx.Done():
 			fmt.Println("error channel never closed")
