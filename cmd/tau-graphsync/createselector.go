@@ -11,7 +11,8 @@ import (
 func stateSelector() ipld.Node {
 	ssb := builder.NewSelectorSpecBuilder(ipldfree.NodeBuilder())
     //return ssb.ExploreAll(ssb.Matcher()).Node()
-    return ssb.ExploreAll(ssb.ExploreFields(func(efsb selectorbuilder.ExploreFieldsSpecBuilder) {
+    return ssb.ExploreIndex(1, ssb.ExploreFields(func(efsb selectorbuilder.ExploreFieldsSpecBuilder) {
+		//efsb.Insert("0", ssb.ExploreAll(ssb.Matcher()))
 		efsb.Insert("0", ssb.Matcher())
 	})).Node()
 }
