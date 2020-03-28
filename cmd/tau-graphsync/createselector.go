@@ -13,7 +13,10 @@ func stateSelector() ipld.Node {
     //return ssb.ExploreAll(ssb.Matcher()).Node()
     return ssb.ExploreIndex(1, ssb.ExploreFields(func(efsb selectorbuilder.ExploreFieldsSpecBuilder) {
 		//efsb.Insert("0", ssb.ExploreAll(ssb.Matcher()))
-		efsb.Insert("0", ssb.Matcher())
+		//efsb.Insert("0", ssb.Matcher())
+		efsb.Insert("0", ssb.ExploreFields(func(efsb1 selectorbuilder.ExploreFieldsSpecBuilder) {
+			efsb1.Insert("/", ssb.ExploreAll(ssb.Matcher()))
+		}))
 	})).Node()
 }
 
