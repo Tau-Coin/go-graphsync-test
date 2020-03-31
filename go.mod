@@ -16,6 +16,7 @@ require (
 	github.com/multiformats/go-multiaddr v0.2.1
 	github.com/multiformats/go-multihash v0.0.13
 	github.com/spaolacci/murmur3 v1.1.0
+	github.com/whyrusleeping/cbor-gen v0.0.0-20200123233031-1cdf64d27158
 )
 
 replace github.com/ipfs/go-ipfs => github.com/tau-coin/go-ipfs v0.4.22-0.20200313092758-7b227442e904
