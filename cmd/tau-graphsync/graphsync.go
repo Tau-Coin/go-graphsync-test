@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/libp2p/go-libp2p-core/host"
 
@@ -135,27 +134,31 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID, account string) {
 	}
 
 	fmt.Printf("graphsync is starting..., sync accout is: %v\n", account)
-	start := time.Now()
+	//start := time.Now()
 
 	//progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, mapSelector(), gsCtx.extension)
 	//progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, hamtTreeSelector(), gsCtx.extension)
-	progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, accountStateSelector(account), gsCtx.extension)
+	//progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, accountStateSelector(account), gsCtx.extension)
 
-	responses := collectResponses(gsCtx.ctx,  progressChan)
-	errs := collectErrors(gsCtx.ctx, errChan)
+	//responses := collectResponses(gsCtx.ctx,  progressChan)
+	//errs := collectErrors(gsCtx.ctx, errChan)
 
-	fmt.Printf("graphsyn result, response size:%d, errors size:%d\n", len(responses), len(errs))
-	if len(errs) != 0 {
-		fmt.Println("errors during traverse")
-		return
-	}
+	//fmt.Printf("graphsyn result, response size:%d, errors size:%d\n", len(responses), len(errs))
+	//if len(errs) != 0 {
+		//fmt.Println("errors during traverse")
+		//return
+	//}
 
-	fmt.Println("graph sync took: ", time.Since(start))
+	//fmt.Println("graph sync took: ", time.Since(start))
 
+	/*
 	for _, response := range responses {
 		fmt.Printf("node path:%s\n", response.Path.String())
 		//fmt.Printf("node json:%s\n", nodeToJson(response.Node))
 	}
+	*/
+
+	triggerHamtTest(gsCtx, pid, account)
 }
 
 // collectResponses is just a utility to convert a graphsync response progress
