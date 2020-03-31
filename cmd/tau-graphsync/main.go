@@ -22,6 +22,13 @@ var (
 
 func main() {
 
+	if len(os.Args)!=2{
+		fmt.Println("Please check your command!")
+		os.Exit(1)
+	}
+
+	account := os.Args[1]
+
 	intrh, ctx := util.SetupInterruptHandler(context.Background())
 	defer intrh.Close()
 
@@ -70,7 +77,7 @@ func main() {
 
 	subscription, err = gsCtx.Host().EventBus().Subscribe(&event.EvtPeerIdentificationCompleted{}, eventbus.BufSize(32))
 	wg.Add(1)
-	go handleEvent(wg, subscription, gsCtx)
+	go handleEvent(wg, subscription, gsCtx, account)
 
 	wg.Add(1)
 	go func() {
@@ -111,7 +118,7 @@ func testCoreAPI() {
 	fmt.Println("Coreapi test passed")
 }
 
-func handleEvent(wg sync.WaitGroup, sub event.Subscription, gsCtx *GraphsyncContext) {
+func handleEvent(wg sync.WaitGroup, sub event.Subscription, gsCtx *GraphsyncContext, account string) {
 	defer wg.Done()
 
 	defer func() {
@@ -121,7 +128,7 @@ func handleEvent(wg sync.WaitGroup, sub event.Subscription, gsCtx *GraphsyncCont
 		}
 	}()
 
-	fmt.Println("starting handle event...")
+	fmt.Println("starting handle event for testing account: ", account)
 	for {
 		select {
 		case evt, more := <-sub.Out():
@@ -137,7 +144,7 @@ func handleEvent(wg sync.WaitGroup, sub event.Subscription, gsCtx *GraphsyncCont
 				fmt.Printf("Identity completed peer:%s\n", pid)
 				if isRelay(gsCtx.Host().Peerstore().Addrs(pid)) {
 					// trigger graphsync process
-					go gsCtx.GraphsyncTest(pid)
+					go gsCtx.GraphsyncTest(pid, account)
 				}
 			}
 		case <-gsCtx.ctx.Done():

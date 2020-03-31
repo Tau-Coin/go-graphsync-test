@@ -96,7 +96,7 @@ func (gsCtx *GraphsyncContext) Host() host.Host {
 	return gsCtx.host
 }
 
-func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
+func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID, account string) {
 	var (
 		receivedResponseData []byte
 		receivedRequestData []byte
@@ -134,11 +134,12 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID) {
 		return
 	}
 
-	fmt.Println("graphsync is starting...")
+	fmt.Printf("graphsync is starting..., sync accout is: %v\n", account)
 	start := time.Now()
 
 	//progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, mapSelector(), gsCtx.extension)
-	progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, stateSelector(), gsCtx.extension)
+	//progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, hamtTreeSelector(), gsCtx.extension)
+	progressChan, errChan := gsCtx.graphExchanger.Request(gsCtx.ctx, pid, gsCtx.root, accountStateSelector(account), gsCtx.extension)
 
 	responses := collectResponses(gsCtx.ctx,  progressChan)
 	errs := collectErrors(gsCtx.ctx, errChan)
