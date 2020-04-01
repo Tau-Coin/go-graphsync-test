@@ -18,9 +18,10 @@ import (
 const defaultBitWidth = 8
 
 var (
-	errNodeSize = errors.New("graphsync return nodes' size mismatch")
-	errNodeType = errors.New("graphsync return nodes' type mismatch")
-	errNotFound = errors.New("hamt value not found")
+	errNodeSize	= errors.New("graphsync return nodes' size mismatch")
+	errNodeType	= errors.New("graphsync return nodes' type mismatch")
+	errNotFound	= errors.New("hamt value not found")
+	errHamtFormat	= errors.New("hamt data format error")
 )
 
 type hamtTestContext struct {
@@ -67,6 +68,62 @@ func (hamtCtx *hamtTestContext) getValue(hv *hashBits, k string, link ipld.Link,
 		return errNotFound
 	}
 	fmt.Println("child node type:", child.ReprKind())
+	// For hamt data format, child must be map and length must be '1'
+	if child.ReprKind() !=ipld.ReprKind_Map && child.Length() != 1 {
+		fmt.Printf("%v\n", errHamtFormat)
+		return errHamtFormat
+	}
+
+	iter := child.MapIterator()
+	for !iter.Done() {
+		key, value, err := iter.Next()
+		if err != nil {
+			fmt.Printf("map iter error:%v\n", err)
+			return err
+		}
+		fmt.Printf("key type:%v, value type:%v\n", key.ReprKind(), value.ReprKind())
+
+		if value.ReprKind() == ipld.ReprKind_Link {
+			childLink, _ := value.AsLink()
+			fmt.Println("cid link:", childLink.String())
+			return hamtCtx.getValue(hv, k, childLink, cb)
+		}
+
+		// Here the value must be list
+		if value.ReprKind() != ipld.ReprKind_List {
+			fmt.Println("hamt data format error")
+			return errHamtFormat
+		}
+		listIter := value.ListIterator()
+		for !listIter.Done() {
+			_, v, err := listIter.Next()
+			if err != nil {
+				fmt.Printf("list iter error:%v\n", err)
+				return err
+			}
+
+			// Here the value should be list
+			if v.ReprKind() != ipld.ReprKind_List {
+				fmt.Println("hamt kv data foramt error")
+				return errHamtFormat
+			}
+
+			// KV list length should be 2
+			if v.Length() != 2 {
+				fmt.Printf("kv value node size error:%d\n", v.Length())
+				return errHamtFormat
+			}
+
+			targetK, _ := value.LookupIndex(0)
+			targetV, _ := value.LookupIndex(1)
+			fmt.Printf("targetK type:%s, targetV type:%s\n", targetK.ReprKind(), targetV.ReprKind())
+			if targetK.ReprKind() == ipld.ReprKind_String && targetV.ReprKind() == ipld.ReprKind_String {
+				keyStr, _ := targetK.AsString()
+				valueStr, _ := targetV.AsString()
+				fmt.Printf("key str:%s, value str:%s\n", keyStr, valueStr)
+			}
+		}
+	}
 
 	return nil
 }
