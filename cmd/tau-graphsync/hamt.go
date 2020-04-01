@@ -11,8 +11,6 @@ import (
 	ipldfree "github.com/ipld/go-ipld-prime/impl/free"
 	"github.com/ipld/go-ipld-prime/traversal/selector/builder"
 	"github.com/libp2p/go-libp2p-core/peer"
-
-	cbg "github.com/whyrusleeping/cbor-gen"
 )
 
 const defaultBitWidth = 8
@@ -114,13 +112,17 @@ func (hamtCtx *hamtTestContext) getValue(hv *hashBits, k string, link ipld.Link,
 				return errHamtFormat
 			}
 
-			targetK, _ := value.LookupIndex(0)
-			targetV, _ := value.LookupIndex(1)
+			targetK, _ := v.LookupIndex(0)
+			targetV, _ := v.LookupIndex(1)
 			fmt.Printf("targetK type:%s, targetV type:%s\n", targetK.ReprKind(), targetV.ReprKind())
-			if targetK.ReprKind() == ipld.ReprKind_String && targetV.ReprKind() == ipld.ReprKind_String {
+			if targetK.ReprKind() == ipld.ReprKind_String && targetV.ReprKind() == ipld.ReprKind_Bytes {
 				keyStr, _ := targetK.AsString()
-				valueStr, _ := targetV.AsString()
-				fmt.Printf("key str:%s, value str:%s\n", keyStr, valueStr)
+				valueBytes, _ := targetV.AsBytes()
+				fmt.Printf("key str:%s, value bytes:%v\n", keyStr, valueBytes)
+				if keyStr == k {
+					fmt.Println("Got the result for the key:", k)
+					cb(&KV{Key: keyStr, Value: valueBytes})
+				}
 			}
 		}
 	}
@@ -187,7 +189,7 @@ func getChild(idx int, list ipld.Node) (ipld.Node, error) {
 
 type KV struct {
 	Key   string
-	Value *cbg.Deferred
+	Value []byte
 }
 
 // HAMT selector should return two ipld nodes in a list. The first entry
