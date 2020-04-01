@@ -1,7 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"math/big"
+	"math/bits"
 
 	_  "github.com/ipfs/go-graphsync"
 	ipld "github.com/ipld/go-ipld-prime"
@@ -13,6 +16,12 @@ import (
 )
 
 const defaultBitWidth = 8
+
+var (
+	errNodeSize = errors.New("graphsync return nodes' size mismatch")
+	errNodeType = errors.New("graphsync return nodes' type mismatch")
+	errNotFound = errors.New("hamt value not found")
+)
 
 type hamtTestContext struct {
 	gsCtx			*GraphsyncContext
@@ -30,15 +39,34 @@ func triggerHamtTest(gsCtx *GraphsyncContext, pid peer.ID, account string) {
 	go hamtCtx.Start()
 }
 
-func (hamtCtx *hamtTestContext) Start() {}
+func (hamtCtx *hamtTestContext) Start() {
+	hamtCtx.getValue(&hashBits{b: hash(hamtCtx.account)}, hamtCtx.account, hamtCtx.gsCtx.root, func(*KV) error {return nil})
+}
 
 func (hamtCtx *hamtTestContext) getValue(hv *hashBits, k string, link ipld.Link, cb func(*KV) error) error {
-	_, err := hv.Next(defaultBitWidth)
+	idx, err := hv.Next(defaultBitWidth)
 	if err != nil {
 		return err
 	}
 
 	// first of all get bitmap and hash array
+	bitmap, array, err := hamtCtx.getHamtNode(link)
+	if err != nil {
+		return err
+	}
+	bitfield := parseBitmap(bitmap)
+	if bitfield.Bit(idx) == 0 {
+		return errNotFound
+	}
+	cindex := indexForBitPos(idx, bitfield)
+	child, err := getChild(cindex, array)
+	if err != nil {
+		return err
+	}
+	if child == nil {
+		return errNotFound
+	}
+	fmt.Println("child node type:", child.ReprKind())
 
 	return nil
 }
@@ -62,12 +90,42 @@ func (hamtCtx *hamtTestContext) getHamtNode(link ipld.Link) (ipld.Node, ipld.Nod
 		array  ipld.Node
 	)
 
-	// responses length should be always 2
-	for _, n := range responses {
-		fmt.Printf("%v\n", n)
+	// responses length should be always 3
+	fmt.Printf("reponses nodes size:%d\n", len(responses))
+	if len(responses) != 3 {
+		fmt.Println("hamt selector error")
+		return nil, nil, errNodeSize
+	}
+
+	for _, r := range responses {
+		fmt.Printf("type:%s, %v\n", r.Node.ReprKind(), r)
+		if r.Node.ReprKind() == ipld.ReprKind_List {
+			fmt.Println("list length:", r.Node.Length())
+		}
+		if r.Node.ReprKind() == ipld.ReprKind_Bytes {
+			b, err := r.Node.AsBytes()
+			fmt.Printf("bytes:%v, err:%v\n", b, err)
+		}
+	}
+
+	bitmap = responses[1].Node
+	array  = responses[2].Node
+
+	if bitmap.ReprKind() != ipld.ReprKind_Bytes || array.ReprKind() != ipld.ReprKind_List {
+		fmt.Println("Error:hamt nodes type mismatch")
+		return nil, nil, errNodeType
 	}
 
 	return bitmap, array, nil
+}
+
+func parseBitmap(node ipld.Node) *big.Int {
+	bytes, _ := node.AsBytes()
+	return big.NewInt(0).SetBytes(bytes)
+}
+
+func getChild(idx int, list ipld.Node) (ipld.Node, error) {
+	return list.LookupIndex(idx)
 }
 
 type KV struct {
@@ -80,4 +138,18 @@ type KV struct {
 func hamtSelector() ipld.Node {
 	ssb := builder.NewSelectorSpecBuilder(ipldfree.NodeBuilder())
 	return ssb.ExploreAll(ssb.Matcher()).Node()
+}
+
+func indexForBitPos(bp int, bitfield *big.Int) int {
+	var x uint
+	var count, i int
+	w := bitfield.Bits()
+	for x = uint(bp); x > bits.UintSize && i < len(w); x -= bits.UintSize {
+		count += bits.OnesCount(uint(w[i]))
+		i++
+	}
+	if i == len(w) {
+		return count
+	}
+	return count + bits.OnesCount(uint(w[i])&((1<<x)-1))
 }
