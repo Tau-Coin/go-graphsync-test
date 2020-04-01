@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/bits"
+	"time"
 
 	_  "github.com/ipfs/go-graphsync"
 	ipld "github.com/ipld/go-ipld-prime"
@@ -39,7 +40,19 @@ func triggerHamtTest(gsCtx *GraphsyncContext, pid peer.ID, account string) {
 }
 
 func (hamtCtx *hamtTestContext) Start() {
-	hamtCtx.getValue(&hashBits{b: hash(hamtCtx.account)}, hamtCtx.account, hamtCtx.gsCtx.root, func(*KV) error {return nil})
+	start := time.Now()
+
+	err := hamtCtx.getValue(&hashBits{b: hash(hamtCtx.account)}, hamtCtx.account, hamtCtx.gsCtx.root, func(result *KV) error {
+		if result != nil {
+			fmt.Printf("hamt get ok! key:%s, value:%s\n", result.Key, string(result.Value))
+		}
+		return nil
+	})
+
+	fmt.Println("hamt query took:", time.Since(start))
+	if err != nil {
+		fmt.Printf("hamt query error:%v\n", err)
+	}
 }
 
 func (hamtCtx *hamtTestContext) getValue(hv *hashBits, k string, link ipld.Link, cb func(*KV) error) error {
@@ -65,7 +78,7 @@ func (hamtCtx *hamtTestContext) getValue(hv *hashBits, k string, link ipld.Link,
 	if child == nil {
 		return errNotFound
 	}
-	fmt.Println("child node type:", child.ReprKind())
+	//fmt.Println("child node type:", child.ReprKind())
 	// For hamt data format, child must be map and length must be '1'
 	if child.ReprKind() !=ipld.ReprKind_Map && child.Length() != 1 {
 		fmt.Printf("%v\n", errHamtFormat)
@@ -74,12 +87,12 @@ func (hamtCtx *hamtTestContext) getValue(hv *hashBits, k string, link ipld.Link,
 
 	iter := child.MapIterator()
 	for !iter.Done() {
-		key, value, err := iter.Next()
+		_, value, err := iter.Next()
 		if err != nil {
 			fmt.Printf("map iter error:%v\n", err)
 			return err
 		}
-		fmt.Printf("key type:%v, value type:%v\n", key.ReprKind(), value.ReprKind())
+		//fmt.Printf("key type:%v, value type:%v\n", key.ReprKind(), value.ReprKind())
 
 		if value.ReprKind() == ipld.ReprKind_Link {
 			childLink, _ := value.AsLink()
@@ -114,13 +127,13 @@ func (hamtCtx *hamtTestContext) getValue(hv *hashBits, k string, link ipld.Link,
 
 			targetK, _ := v.LookupIndex(0)
 			targetV, _ := v.LookupIndex(1)
-			fmt.Printf("targetK type:%s, targetV type:%s\n", targetK.ReprKind(), targetV.ReprKind())
+			//fmt.Printf("targetK type:%s, targetV type:%s\n", targetK.ReprKind(), targetV.ReprKind())
 			if targetK.ReprKind() == ipld.ReprKind_String && targetV.ReprKind() == ipld.ReprKind_Bytes {
 				keyStr, _ := targetK.AsString()
 				valueBytes, _ := targetV.AsBytes()
-				fmt.Printf("key str:%s, value bytes:%v\n", keyStr, valueBytes)
+				//fmt.Printf("key str:%s, value bytes:%v\n", keyStr, valueBytes)
 				if keyStr == k {
-					fmt.Println("Got the result for the key:", k)
+					//fmt.Println("Got the result for the key:", k)
 					cb(&KV{Key: keyStr, Value: valueBytes})
 				}
 			}
@@ -150,20 +163,20 @@ func (hamtCtx *hamtTestContext) getHamtNode(link ipld.Link) (ipld.Node, ipld.Nod
 	)
 
 	// responses length should be always 3
-	fmt.Printf("reponses nodes size:%d\n", len(responses))
+	//fmt.Printf("reponses nodes size:%d\n", len(responses))
 	if len(responses) != 3 {
 		fmt.Println("hamt selector error")
 		return nil, nil, errNodeSize
 	}
 
 	for _, r := range responses {
-		fmt.Printf("type:%s, %v\n", r.Node.ReprKind(), r)
+		//fmt.Printf("type:%s, %v\n", r.Node.ReprKind(), r)
 		if r.Node.ReprKind() == ipld.ReprKind_List {
 			fmt.Println("list length:", r.Node.Length())
 		}
 		if r.Node.ReprKind() == ipld.ReprKind_Bytes {
-			b, err := r.Node.AsBytes()
-			fmt.Printf("bytes:%v, err:%v\n", b, err)
+			//b, err := r.Node.AsBytes()
+			//fmt.Printf("bytes:%v, err:%v\n", b, err)
 		}
 	}
 
