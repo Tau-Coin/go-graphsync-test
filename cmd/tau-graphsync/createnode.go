@@ -119,18 +119,6 @@ func readKeyValue()([]string, map[string][]byte){
 // setup state hamt tree, and return the root link or some error
 func createStateNode(ctx context.Context) (ipld.Link, error) {
 
-	/*
-	fmt.Println("Start key and value assignment")
-	vals := make(map[string][]byte)
-	var keys []string
-	for i := 0; i < 10; i++ {
-		//s := randString()
-		//vals[s] = randValue()
-		s := testString(i)
-		vals[s] = testValue(i)
-		keys = append(keys, s)
-	}
-	*/
 	fmt.Println("Start reading file")
 	keys, vals := readKeyValue()
 	fmt.Println("End reading file")
@@ -147,6 +135,14 @@ func createStateNode(ctx context.Context) (ipld.Link, error) {
 			return nil,  err
 		}
 	}
+
+	for i := 0; i < 100000000; i++ {
+		if err := begn.Set(ctx, randString(), randValue()); err != nil {
+			fmt.Println("hamt node set err:", err)
+			return nil, err
+		}
+	}
+
 	fmt.Println("set took: ", time.Since(bSet))
 
 	fmt.Println("start flush")
@@ -166,5 +162,46 @@ func createStateNode(ctx context.Context) (ipld.Link, error) {
 
 	fmt.Println("Cid is: ", c)
 
+	hamtTest(ctx, cs, c)
+
 	return cidlink.Link{c}, nil
+}
+
+var testKeys = []string {
+	"TA7QFFvxF1nLZUG4ecp685dLbkJoBZwUAm",
+	"TA7XKuSZBGwFds8YHhN2Wmkm2BK7qDpGKb",
+	"TA83nWtuYPmjdGexR3nZ2RSzXorGyw4BTz",
+	"TA8GswGDaMVMZVVSB3CETR9Xj7y1urDr59",
+	"TA8hdCdURvDfzL2fCJUCS9TM1NTmsGZuid",
+	"TA8PUrT842mEgCyKg9S3FDDDktcR99Lch7",
+	"TA8zQhMvQuzvBjfc1EzjFAH7TLX2fJ9K7S",
+	"TA98HVHB1r1GLu5vxp7TDC6szfBiS2dK5K",
+	"TA98kjzQekCkwXsmeUvxdfGaVJdHWzCaVF",
+	"TA9b2PmZukevtPzKWYdZSFaRmmJXpgdZEw",
+}
+
+func hamtTest(ctx context.Context, cs *hamt.CborIpldStore, c cid.Cid) {
+	node := hamt.NewNode(cs)
+	err := cs.Get(ctx, c, node)
+	if err != nil {
+		fmt.Println("block store get hamt node err:", err)
+		return
+	}
+
+	costs	:= make(map[string]time.Duration)
+	results	:= make(map[string]string)
+
+	for _, k := range testKeys {
+		start := time.Now()
+		var v []byte
+		err := node.Find(ctx, k, &v)
+		if err == nil {
+			costs[k] = time.Since(start)
+			results[k] = string(v)
+		}
+	}
+
+	for key, value := range results {
+		fmt.Printf("key:%s, value:%s, time cost:%v\n", key, value, costs[key])
+	}
 }
