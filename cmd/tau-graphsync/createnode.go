@@ -136,12 +136,14 @@ func createStateNode(ctx context.Context) (ipld.Link, error) {
 		}
 	}
 
+	/*
 	for i := 0; i < 100000000; i++ {
 		if err := begn.Set(ctx, randString(), randValue()); err != nil {
 			fmt.Println("hamt node set err:", err)
 			return nil, err
 		}
 	}
+	*/
 
 	fmt.Println("set took: ", time.Since(bSet))
 
@@ -162,7 +164,7 @@ func createStateNode(ctx context.Context) (ipld.Link, error) {
 
 	fmt.Println("Cid is: ", c)
 
-	hamtTest(ctx, cs, c)
+	//hamtTest(ctx, cs, c)
 
 	return cidlink.Link{c}, nil
 }
