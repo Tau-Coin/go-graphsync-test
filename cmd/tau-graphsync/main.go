@@ -62,7 +62,8 @@ func main() {
 
 	// Anyway, we should setup state tree firstly.
 	//root, err = createMapNode(ctx)
-	root, err = createStateNode(ctx)
+	//root, err = createStateNode(ctx)
+	root, err = createAMTRoot(ctx)
 	if err != nil {
 		fmt.Printf("setup state tree error:%v\n", err)
 		os.Exit(1)
@@ -142,10 +143,10 @@ func handleEvent(wg sync.WaitGroup, sub event.Subscription, gsCtx *GraphsyncCont
 			if ok {
 				pid := idCompletedEvt.Peer
 				fmt.Printf("Identity completed peer:%s\n", pid)
-				if isRelay(gsCtx.Host().Peerstore().Addrs(pid)) {
+				//if isRelay(gsCtx.Host().Peerstore().Addrs(pid)) {
 					// trigger graphsync process
 					go gsCtx.GraphsyncTest(pid, account)
-				}
+				//}
 			}
 		case <-gsCtx.ctx.Done():
 			return
