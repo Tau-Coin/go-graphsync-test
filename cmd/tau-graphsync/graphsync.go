@@ -158,7 +158,7 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID, account string) {
 	}
 	*/
 
-	triggerHamtTest(gsCtx, pid, account)
+	triggerAMTTest(gsCtx, pid, account)
 }
 
 // collectResponses is just a utility to convert a graphsync response progress
