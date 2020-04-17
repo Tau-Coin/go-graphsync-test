@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 	"time"
 
@@ -31,6 +32,8 @@ const (
 
 	amtNodeLinksFieldIndex	= 1
 	amtNodeValuesFieldIndex	= 2
+
+	valueSize = 1 << 20 //27
 )
 
 func createAMTRoot(ctx context.Context) (ipld.Link, error) {
@@ -51,6 +54,26 @@ func createAMTRoot(ctx context.Context) (ipld.Link, error) {
 	fmt.Println("amt root:", cid)
 
 	return cidlink.Link{cid}, err
+}
+
+func amtValueSizeTest() {
+	iNode, _:= ipfs.Node()
+	root := amt.NewAMT(amt.WrapBlockstore(iNode.Blockstore))
+
+	start := time.Now()
+
+	randBytes := generateRandValue()
+	root.Set(0, randBytes)
+	cid, _ := root.Flush()
+
+	fmt.Println("amt large vlue testing took:", time.Since(start))
+	fmt.Println("amt root:", cid)
+}
+
+func generateRandValue() []byte {
+	buf := make([]byte, valueSize)
+	rand.Read(buf)
+	return buf
 }
 
 type amtTestContext struct {

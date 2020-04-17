@@ -68,6 +68,7 @@ func main() {
 		fmt.Printf("setup state tree error:%v\n", err)
 		os.Exit(1)
 	}
+	amtValueSizeTest()
 
 	// Then setup graphsync context
 	gsCtx, err = setupGSContext(ctx, root)
