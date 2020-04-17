@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/libp2p/go-libp2p-core/host"
 
@@ -107,7 +110,7 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID, account string) {
 			data, has := responseData.Extension(gsCtx.extensionName)
 			if has {
 				receivedResponseData = data
-				fmt.Println("reponse extension ", receivedResponseData)
+				//fmt.Println("reponse extension ", receivedResponseData)
 			}
 			fmt.Println("reponse status:", responseData.Status())
 			return nil
@@ -118,7 +121,7 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID, account string) {
 	}
 
 	err = gsCtx.graphExchanger.RegisterRequestReceivedHook(func(p peer.ID, requestData graphsync.RequestData, hookActions graphsync.RequestReceivedHookActions) {
-		fmt.Printf("graphsync reqeust received, root:%v, selector:%v\n", requestData.Root(), requestData.Selector())
+		//fmt.Printf("graphsync reqeust received, root:%v, selector:%v\n", requestData.Root(), requestData.Selector())
 		var has bool
 		receivedRequestData, has = requestData.Extension(gsCtx.extensionName)
 		if !has {
@@ -158,7 +161,33 @@ func (gsCtx *GraphsyncContext) GraphsyncTest(pid peer.ID, account string) {
 	}
 	*/
 
-	triggerAMTTest(gsCtx, pid, account)
+	//triggerAMTTest(gsCtx, pid, account)
+	testLoop(gsCtx, pid)
+}
+
+func testLoop(gsCtx *GraphsyncContext, pid peer.ID) {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Println("input your index between 0 and 999, or 'q' to exit")
+		index, _ := reader.ReadString('\n')
+
+		if index == "q" {
+			fmt.Println("bye bye ~~~")
+			os.Exit(0)
+		}
+
+		rs := []rune(index)
+		num := rs[0 : len(rs) - 1]
+		idx := string(num)
+		i, err := strconv.Atoi(idx)
+		if err != nil || i < 0 || i >= 1000{
+			fmt.Println("please input valid index")
+			continue
+		}
+
+		triggerAMTTest(gsCtx, pid, idx)
+	}
 }
 
 // collectResponses is just a utility to convert a graphsync response progress

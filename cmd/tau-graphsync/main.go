@@ -22,12 +22,14 @@ var (
 
 func main() {
 
+	/*
 	if len(os.Args)!=2{
 		fmt.Println("Please check your command!")
 		os.Exit(1)
 	}
+	 */
 
-	account := os.Args[1]
+	account := "1"
 
 	intrh, ctx := util.SetupInterruptHandler(context.Background())
 	defer intrh.Close()
@@ -68,7 +70,7 @@ func main() {
 		fmt.Printf("setup state tree error:%v\n", err)
 		os.Exit(1)
 	}
-	amtValueSizeTest()
+	//amtValueSizeTest()
 
 	// Then setup graphsync context
 	gsCtx, err = setupGSContext(ctx, root)

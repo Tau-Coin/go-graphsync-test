@@ -64,7 +64,10 @@ func amtValueSizeTest() {
 
 	randBytes := generateRandValue()
 	root.Set(0, randBytes)
-	cid, _ := root.Flush()
+	cid, err := root.Flush()
+	if err != nil {
+		fmt.Println("amt flush err:", err)
+	}
 
 	fmt.Println("amt large vlue testing took:", time.Since(start))
 	fmt.Println("amt root:", cid)
@@ -95,7 +98,7 @@ func triggerAMTTest(gsCtx *GraphsyncContext, pid peer.ID, index string) {
 		index:	uint64(idxInt64),
         }
 
-        go amtCtx.Start()
+        amtCtx.Start()
 }
 
 func (amtCtx *amtTestContext) Start() {
@@ -106,6 +109,7 @@ func (amtCtx *amtTestContext) Start() {
 		fmt.Println("get amt root err:", err)
 		return
 	}
+	gsFirst := time.Now()
 
 	h, _ := height.AsInt()
 	c, _ := count.AsInt()
@@ -130,6 +134,7 @@ func (amtCtx *amtTestContext) Start() {
 
 	selector := amtNodeSelector(path)
 
+	gsSecond0 := time.Now()
 	var value string
 	err = amtCtx.getValue(link, selector, func(r *result) error {
 		if r != nil {
@@ -143,8 +148,10 @@ func (amtCtx *amtTestContext) Start() {
 	if err != nil {
 		fmt.Println("amt get value err:", err)
 	}
+	gsSecond1 := time.Now()
 
-	fmt.Println("amt graphsync took:", time.Since(start))
+	fmt.Printf("amt graphsync took:%v, first graphsync took:%v, second graphsync:%v\n",
+		time.Since(start), gsFirst.Sub(start), gsSecond1.Sub(gsSecond0))
 }
 
 func (amtCtx *amtTestContext) getAMTRoot(link ipld.Link) (ipld.Node, ipld.Node, ipld.Node, error) {
