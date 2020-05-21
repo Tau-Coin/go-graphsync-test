@@ -85,7 +85,7 @@ func setupGSContext(ctx context.Context, root ipld.Link) (*GraphsyncContext, err
 		Data: gsCtx.extensionResponseData,
 	}
 
-	gsCtx.graphExchanger		= gsCtx.GraphSyncHost()
+	gsCtx.graphExchanger		= ipfsNode.GraphExchange//gsCtx.GraphSyncHost()
 
 	return gsCtx, nil
 }
